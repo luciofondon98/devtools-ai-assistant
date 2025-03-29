@@ -65,12 +65,12 @@ async function initializePanel() {
         }
 
         // Add welcome message
-        addMessage('👋 Hello! I\'m your AI Assistant. I can help you with:\n\n' +
-                  '• Analyzing the current page\'s code\n' +
-                  '• Suggesting improvements\n' +
-                  '• Explaining code snippets\n' +
-                  '• Generating selectors\n\n' +
-                  'What would you like to know?', 'assistant');
+        addMessage('👋 ¡Hola! Soy tu Asistente de JavaScript. Te puedo ayudar con:\n\n' +
+                  '💻 Analizar el código JavaScript de la página actual\n' +
+                  '⭐ Sugerir mejoras y buenas prácticas\n' +
+                  '📖 Explicar fragmentos de código\n' +
+                  '🎯 Generar selectores DOM\n\n' +
+                  '¿En qué puedo ayudarte hoy? 👋', 'assistant');
 
         // Get page information
         const response = await chrome.runtime.sendMessage({ type: 'GET_PAGE_INFO' });
