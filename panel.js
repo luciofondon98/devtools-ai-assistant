@@ -17,19 +17,37 @@ function addMessage(text, type) {
         return;
     }
 
+    const messageWrapper = document.createElement('div');
+    messageWrapper.className = 'message-wrapper';
+
+    // Create avatar
+    const avatar = document.createElement('div');
+    avatar.className = `avatar ${type}-avatar`;
+    avatar.textContent = type === 'user' ? 'U' : 'A';
+
+    // Create message container
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}-message`;
     
     // Format code blocks
     let formattedText = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        return `<pre><code>${code.trim()}</code></pre>`;
+        const lang = language ? ` class="language-${language}"` : '';
+        return `<pre><code${lang}>${code.trim()}</code></pre>`;
     });
     
     // Format inline code
     formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
     
+    // Format line breaks
+    formattedText = formattedText.replace(/\n/g, '<br>');
+    
     messageDiv.innerHTML = formattedText;
-    chatContainer.appendChild(messageDiv);
+    
+    // Assemble message
+    messageWrapper.appendChild(avatar);
+    messageWrapper.appendChild(messageDiv);
+    
+    chatContainer.appendChild(messageWrapper);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
@@ -46,18 +64,25 @@ async function initializePanel() {
             throw new Error('Required DOM elements not found');
         }
 
-        // Add welcome message first
-        addMessage('Hello! I\'m your AI Assistant. I can help you with:\n' +
-                  '- Analyzing the current page\'s code\n' +
-                  '- Suggesting improvements\n' +
-                  '- Explaining code snippets\n' +
-                  '- Generating selectors\n' +
+        // Add welcome message
+        addMessage('👋 Hello! I\'m your AI Assistant. I can help you with:\n\n' +
+                  '• Analyzing the current page\'s code\n' +
+                  '• Suggesting improvements\n' +
+                  '• Explaining code snippets\n' +
+                  '• Generating selectors\n\n' +
                   'What would you like to know?', 'assistant');
 
-        // Then get page information
+        // Get page information
         const response = await chrome.runtime.sendMessage({ type: 'GET_PAGE_INFO' });
         currentPageInfo = response;
         console.log('Page info loaded:', currentPageInfo);
+
+        // Auto-resize input field
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
     } catch (error) {
         console.error('Error initializing panel:', error);
         addMessage('Error initializing panel: ' + error.message, 'error');
@@ -74,8 +99,9 @@ async function sendMessage() {
     const message = userInput.value.trim();
     if (!message) return;
 
-    // Clear input
+    // Clear input and reset height
     userInput.value = '';
+    userInput.style.height = '44px';
 
     // Add user message to chat
     addMessage(message, 'user');
@@ -109,11 +135,16 @@ function setupEventListeners() {
     }
 
     sendButton.addEventListener('click', sendMessage);
+    
     userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             sendMessage();
         }
     });
+
+    // Focus input on load
+    userInput.focus();
 }
 
 // Initialize the panel when the page loads

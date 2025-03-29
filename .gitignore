@@ -4,6 +4,12 @@
 # Node modules
 node_modules/
 
+# Build output
+dist/
+
+# Virtual Environment
+venv/
+
 # IDE files
 .vscode/
 .idea/
