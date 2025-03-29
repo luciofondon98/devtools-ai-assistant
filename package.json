@@ -1,0 +1,12 @@
+{
+  "name": "devtools-ai-assistant",
+  "version": "1.0.0",
+  "description": "AI-powered assistant for Chrome DevTools",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  }
+} 

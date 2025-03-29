@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "DevTools AI Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered assistant for Chrome DevTools",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs",
+    "windows"
+  ],
+  "host_permissions": [
+    "https://api.openai.com/*"
+  ],
+  "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+A",
+        "mac": "Command+Shift+A"
+      },
+      "description": "Open AI Assistant panel"
+    }
+  }
+} 
