@@ -28,7 +28,13 @@ if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir);
 }
 
-// Copy and process files
+// Source directory
+const srcDir = path.join(__dirname, 'src');
+if (!fs.existsSync(srcDir)) {
+    fs.mkdirSync(srcDir);
+}
+
+// Files to process from src directory
 const filesToProcess = [
     'manifest.json',
     'devtools.html',
@@ -37,15 +43,19 @@ const filesToProcess = [
     'panel.js',
     'popup.html',
     'popup.js',
-    'background.js'
+    'background.js',
+    'content.js'
 ];
 
+// Process each file from src to dist
 filesToProcess.forEach(file => {
-    const sourcePath = path.join(__dirname, file);
+    const sourcePath = path.join(srcDir, file);
     const targetPath = path.join(distDir, file);
     
     if (fs.existsSync(sourcePath)) {
         buildFile(sourcePath, targetPath);
+    } else {
+        console.warn(`Warning: Source file not found: ${sourcePath}`);
     }
 });
 

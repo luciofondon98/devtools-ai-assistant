@@ -188,6 +188,28 @@
             border-radius: 4px;
             font-size: 0.9em;
         }
+
+        #elementPickerButton {
+            position: absolute;
+            right: 70px; /* Ajustar según sea necesario */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            color: var(--text-color);
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        #elementPickerButton:hover {
+            opacity: 1;
+        }
+
+        #elementPickerButton.active {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -197,10 +219,11 @@
         <div class="input-container">
             <div class="input-wrapper">
                 <input type="text" id="userInput" placeholder="Ask anything about the code...">
+                <button id="elementPickerButton" title="Pick element from page">🎯</button>
                 <button id="sendButton">Send</button>
             </div>
         </div>
     </div>
-    <script src="panel.js"></script>
+    <script src="src/panel.js"></script>
 </body>
 </html> 

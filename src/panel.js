@@ -6,6 +6,7 @@ let chatContainer;
 let userInput;
 let sendButton;
 let loadingIndicator;
+let elementPickerButton;
 
 // State
 let currentPageInfo = null;
@@ -59,8 +60,9 @@ async function initializePanel() {
         userInput = document.getElementById('userInput');
         sendButton = document.getElementById('sendButton');
         loadingIndicator = document.getElementById('loading');
+        elementPickerButton = document.getElementById('elementPickerButton');
 
-        if (!chatContainer || !userInput || !sendButton || !loadingIndicator) {
+        if (!chatContainer || !userInput || !sendButton || !loadingIndicator || !elementPickerButton) {
             throw new Error('Required DOM elements not found');
         }
 
@@ -71,6 +73,16 @@ async function initializePanel() {
                   '📖 Explicar fragmentos de código\n' +
                   '🎯 Generar selectores DOM\n\n' +
                   '¿En qué puedo ayudarte hoy? 👋', 'assistant');
+
+        // Setup element picker
+        elementPickerButton.addEventListener('click', toggleElementPicker);
+
+        // Listen for selected elements
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === 'ELEMENT_SELECTED') {
+                handleElementSelected(message);
+            }
+        });
 
         // Get page information
         const response = await chrome.runtime.sendMessage({ type: 'GET_PAGE_INFO' });
@@ -155,4 +167,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(error => {
         console.error('Failed to initialize panel:', error);
     });
-}); 
+});
+
+// Función para manejar el elemento seleccionado
+function handleElementSelected(elementInfo) {
+    const { selector, tagName, classes, id, text } = elementInfo;
+    
+    // Crear un mensaje descriptivo
+    let description = `📍 Elemento seleccionado:\n`;
+    description += `• Tipo: <${tagName}>\n`;
+    if (id) description += `• ID: "${id}"\n`;
+    if (classes.length) description += `• Clases: ${classes.join(', ')}\n`;
+    if (text) description += `• Texto: "${text}"\n`;
+    
+    description += `\nCódigo para seleccionar este elemento:\n`;
+    description += `\`\`\`javascript\n${selector};\n\`\`\``;
+
+    // Añadir el mensaje al chat
+    addMessage(description, 'assistant');
+
+    // Desactivar el modo de selección
+    elementPickerButton.classList.remove('active');
+}
+
+// Función para activar/desactivar el selector de elementos
+function toggleElementPicker() {
+    const isActive = elementPickerButton.classList.toggle('active');
+    
+    // Enviar mensaje al content script
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+            type: 'TOGGLE_ELEMENT_PICKER'
+        });
+    });
+} 
