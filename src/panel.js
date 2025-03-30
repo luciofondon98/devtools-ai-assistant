@@ -194,6 +194,9 @@ function handleElementSelected(elementInfo) {
 function toggleElementPicker() {
     const isActive = elementPickerButton.classList.toggle('active');
     
+    // Actualizar el texto del botón
+    elementPickerButton.textContent = isActive ? 'Seleccionando...' : 'Select Element';
+    
     // Enviar mensaje al content script
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {

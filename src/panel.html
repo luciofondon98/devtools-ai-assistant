@@ -190,25 +190,49 @@
         }
 
         #elementPickerButton {
-            position: absolute;
-            right: 70px; /* Ajustar según sea necesario */
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
+            position: relative;
+            right: auto;
+            top: auto;
+            transform: none;
+            background-color: var(--primary-color);
             border: none;
             cursor: pointer;
-            padding: 5px;
-            color: var(--text-color);
-            opacity: 0.7;
-            transition: opacity 0.2s;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            color: white;
+            opacity: 1;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        #elementPickerButton::before {
+            content: '🎯';
+            font-size: 16px;
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         #elementPickerButton:hover {
-            opacity: 1;
+            background-color: var(--hover-color);
         }
 
         #elementPickerButton.active {
-            color: var(--primary-color);
+            background-color: var(--hover-color);
+            box-shadow: 0 0 0 2px var(--primary-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 2px var(--primary-color);
+            }
+            50% {
+                box-shadow: 0 0 0 4px var(--primary-color);
+            }
+            100% {
+                box-shadow: 0 0 0 2px var(--primary-color);
+            }
         }
     </style>
 </head>
@@ -219,7 +243,7 @@
         <div class="input-container">
             <div class="input-wrapper">
                 <input type="text" id="userInput" placeholder="Ask anything about the code...">
-                <button id="elementPickerButton" title="Pick element from page">🎯</button>
+                <button id="elementPickerButton" title="Pick element from page">Select Element</button>
                 <button id="sendButton">Send</button>
             </div>
         </div>
