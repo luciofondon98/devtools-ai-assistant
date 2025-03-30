@@ -1,6 +1,13 @@
 // Initialize connection to the background script
 const port = chrome.runtime.connect({ name: 'devtools-panel' });
 
+// Listen for messages from the background script
+port.onMessage.addListener((message) => {
+    if (message.type === 'ELEMENT_SELECTED') {
+        handleElementSelected(message);
+    }
+});
+
 // DOM Elements
 let chatContainer;
 let userInput;
@@ -76,13 +83,6 @@ async function initializePanel() {
 
         // Setup element picker
         elementPickerButton.addEventListener('click', toggleElementPicker);
-
-        // Listen for selected elements
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            if (message.type === 'ELEMENT_SELECTED') {
-                handleElementSelected(message);
-            }
-        });
 
         // Get page information
         const response = await chrome.runtime.sendMessage({ type: 'GET_PAGE_INFO' });
@@ -194,13 +194,18 @@ function handleElementSelected(elementInfo) {
 function toggleElementPicker() {
     const isActive = elementPickerButton.classList.toggle('active');
     
-    // Actualizar el texto del botón
-    elementPickerButton.textContent = isActive ? 'Seleccionando...' : 'Select Element';
-    
-    // Enviar mensaje al content script
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-            type: 'TOGGLE_ELEMENT_PICKER'
-        });
+    // Enviar mensaje al content script a través de la conexión de DevTools
+    chrome.runtime.sendMessage({
+        type: 'TOGGLE_ELEMENT_PICKER',
+        tabId: chrome.devtools.inspectedWindow.tabId
+    }, response => {
+        if (response && response.success) {
+            // Solo actualizar el texto si la operación fue exitosa
+            elementPickerButton.textContent = isActive ? 'Seleccionando...' : 'Select Element';
+        } else {
+            // Si hay error, revertir el estado del botón
+            elementPickerButton.classList.toggle('active');
+            console.error('Error al activar el selector de elementos');
+        }
     });
 } 

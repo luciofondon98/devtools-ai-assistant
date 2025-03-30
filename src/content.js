@@ -4,33 +4,95 @@ let hoveredElement = null;
 
 // Función para generar un selector único para un elemento
 function generateUniqueSelector(element) {
-    // Si tiene ID, usarlo
-    if (element.id) {
-        return `document.getElementById('${element.id}')`;
+    // Si tiene ID y es único, usarlo
+    if (element.id && document.querySelectorAll(`#${element.id}`).length === 1) {
+        return `document.querySelector('#${element.id}')`;
     }
 
-    // Si no tiene ID, construir un selector CSS único
+    // Analizar atributos data- personalizados
+    const dataAttributes = Array.from(element.attributes)
+        .filter(attr => attr.name.startsWith('data-'))
+        .map(attr => `[${attr.name}="${attr.value}"]`);
+    
+    if (dataAttributes.length > 0) {
+        const selector = dataAttributes.join('');
+        if (document.querySelectorAll(selector).length === 1) {
+            return `document.querySelector('${selector}')`;
+        }
+    }
+
+    // Analizar roles ARIA
+    if (element.getAttribute('role')) {
+        const roleSelector = `[role="${element.getAttribute('role')}"]`;
+        const elementsWithRole = document.querySelectorAll(roleSelector);
+        if (elementsWithRole.length === 1) {
+            return `document.querySelector('${roleSelector}')`;
+        }
+    }
+
+    // Analizar clases específicas (evitar clases genéricas como 'container', 'wrapper', etc.)
+    const genericClasses = ['container', 'wrapper', 'row', 'col', 'section', 'content', 'header', 'footer', 'main'];
+    const specificClasses = Array.from(element.classList)
+        .filter(className => !genericClasses.includes(className));
+
+    if (specificClasses.length > 0) {
+        const classSelector = '.' + specificClasses.join('.');
+        if (document.querySelectorAll(classSelector).length === 1) {
+            return `document.querySelector('${classSelector}')`;
+        }
+    }
+
+    // Si el elemento tiene un texto único y específico
+    const text = element.textContent.trim();
+    if (text && text.length < 50) {
+        const textSelector = `${element.tagName.toLowerCase()}:contains("${text}")`;
+        const elementsWithText = Array.from(document.querySelectorAll(element.tagName))
+            .filter(el => el.textContent.trim() === text);
+        if (elementsWithText.length === 1) {
+            return `document.evaluate("//${element.tagName.toLowerCase()}[text()='${text}']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue`;
+        }
+    }
+
+    // Si ninguna de las estrategias anteriores funcionó, construir un selector basado en la estructura
     let path = [];
     let currentElement = element;
+    let foundUniqueSelector = false;
 
-    while (currentElement && currentElement.nodeType === Node.ELEMENT_NODE) {
+    while (currentElement && currentElement.nodeType === Node.ELEMENT_NODE && !foundUniqueSelector) {
         let selector = currentElement.tagName.toLowerCase();
         
-        // Añadir clases si existen
-        if (currentElement.className) {
-            const classes = Array.from(currentElement.classList).join('.');
-            selector += `.${classes}`;
+        // Intentar con clases específicas primero
+        const elementSpecificClasses = Array.from(currentElement.classList)
+            .filter(className => !genericClasses.includes(className));
+        
+        if (elementSpecificClasses.length > 0) {
+            selector += '.' + elementSpecificClasses.join('.');
+            // Verificar si este selector es único
+            if (document.querySelectorAll(selector).length === 1) {
+                path = [selector];
+                foundUniqueSelector = true;
+                break;
+            }
         }
 
-        // Añadir nth-child si tiene hermanos del mismo tipo
-        let siblings = Array.from(currentElement.parentNode?.children || []);
-        if (siblings.length > 1) {
-            let index = siblings.indexOf(currentElement) + 1;
-            selector += `:nth-child(${index})`;
+        // Si no es único, agregar índice entre hermanos similares
+        if (!foundUniqueSelector) {
+            const siblings = Array.from(currentElement.parentNode?.children || [])
+                .filter(child => child.tagName === currentElement.tagName);
+            if (siblings.length > 1) {
+                const index = siblings.indexOf(currentElement) + 1;
+                selector += `:nth-of-type(${index})`;
+            }
         }
 
         path.unshift(selector);
         currentElement = currentElement.parentNode;
+
+        // Verificar si el selector actual es único
+        const currentPath = path.join(' > ');
+        if (document.querySelectorAll(currentPath).length === 1) {
+            foundUniqueSelector = true;
+        }
     }
 
     return `document.querySelector('${path.join(' > ')}')`;

@@ -194,44 +194,38 @@
             right: auto;
             top: auto;
             transform: none;
-            background-color: var(--primary-color);
+            background-color: #7c3aed;
             border: none;
             cursor: pointer;
-            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            padding: 0.5rem 1rem;
             color: white;
             opacity: 1;
             transition: all 0.2s;
             font-size: 15px;
-        }
-
-        #elementPickerButton::before {
-            content: '🎯';
-            font-size: 16px;
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
+            font-weight: 500;
+            min-width: 120px;
         }
 
         #elementPickerButton:hover {
-            background-color: var(--hover-color);
+            background-color: #6d28d9;
+            transform: translateY(-1px);
         }
 
         #elementPickerButton.active {
-            background-color: var(--hover-color);
-            box-shadow: 0 0 0 2px var(--primary-color);
+            background-color: #5b21b6;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.5);
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
             0% {
-                box-shadow: 0 0 0 2px var(--primary-color);
+                box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.5);
             }
             50% {
-                box-shadow: 0 0 0 4px var(--primary-color);
+                box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.3);
             }
             100% {
-                box-shadow: 0 0 0 2px var(--primary-color);
+                box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.5);
             }
         }
     </style>

@@ -120,4 +120,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         return true; // Will respond asynchronously
     }
+
+    if (message.type === 'TOGGLE_ELEMENT_PICKER') {
+        // Enviar el mensaje al content script de la pestaña inspeccionada
+        chrome.tabs.sendMessage(message.tabId, { type: 'TOGGLE_ELEMENT_PICKER' }, response => {
+            sendResponse(response);
+        });
+        return true; // Will respond asynchronously
+    }
+
+    if (message.type === 'ELEMENT_SELECTED') {
+        // Reenviar el mensaje al panel de DevTools
+        connections.forEach(port => {
+            port.postMessage(message);
+        });
+        sendResponse({ success: true });
+        return true;
+    }
 }); 
