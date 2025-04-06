@@ -2,8 +2,18 @@
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''; // Will be replaced during build
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
+// Available OpenAI models
+const AVAILABLE_MODELS = [
+    'gpt-3.5-turbo',
+    'gpt-4',
+    'gpt-4-turbo-preview'
+];
+
 // Store connections to DevTools panels
 const connections = new Set();
+
+// Store chat history for each tab
+const chatHistory = new Map();
 
 // Handle connections from DevTools panels
 chrome.runtime.onConnect.addListener((port) => {
@@ -68,6 +78,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // Will respond asynchronously
     }
 
+    if (message.type === 'GET_AVAILABLE_MODELS') {
+        sendResponse(AVAILABLE_MODELS);
+        return true;
+    }
+
     if (message.type === 'SEND_TO_AI') {
         if (!OPENAI_API_KEY) {
             console.error('OpenAI API key not configured');
@@ -75,14 +90,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
         }
 
-        // Prepare the prompt with context
-        const prompt = `Context: You are an AI assistant helping with web development. 
-                       Current page: ${message.pageInfo.url}
-                       Title: ${message.pageInfo.title}
-                       
-                       User question: ${message.message}
-                       
-                       Please provide a helpful response focusing on web development aspects.`;
+        const { message: userMessage, pageInfo, model = 'gpt-3.5-turbo', tabId } = message;
+
+        // Initialize chat history for this tab if it doesn't exist
+        if (!chatHistory.has(tabId)) {
+            chatHistory.set(tabId, []);
+        }
+
+        // Get current chat history
+        const history = chatHistory.get(tabId);
+
+        // Add system message if this is the first message
+        if (history.length === 0) {
+            history.push({
+                role: 'system',
+                content: `You are an AI assistant helping with web development. 
+                         Current page: ${pageInfo.url}
+                         Title: ${pageInfo.title}`
+            });
+        }
+
+        // Add user message to history
+        history.push({
+            role: 'user',
+            content: userMessage
+        });
 
         // Call OpenAI API
         fetch(OPENAI_API_URL, {
@@ -92,8 +124,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 'Authorization': `Bearer ${OPENAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: prompt }],
+                model: model,
+                messages: history,
                 temperature: 0.7,
                 max_tokens: 500
             })
@@ -110,7 +142,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse('Error: ' + data.error.message);
             } else {
                 console.log('AI response received');
-                sendResponse(data.choices[0].message.content);
+                const assistantMessage = data.choices[0].message;
+                
+                // Add assistant response to history
+                history.push(assistantMessage);
+                
+                // Keep only the last 10 messages to prevent history from growing too large
+                if (history.length > 10) {
+                    history.splice(1, history.length - 10);
+                }
+                
+                sendResponse(assistantMessage.content);
             }
         })
         .catch(error => {
